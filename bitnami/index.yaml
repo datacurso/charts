@@ -68,6 +68,41 @@ entries:
       licenses: Apache-2.0
     apiVersion: v2
     appVersion: 4.5.4
+    created: "2026-07-30T14:15:00-05:00"
+    dependencies:
+    - condition: mariadb.enabled
+      name: mariadb
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 22.x.x
+    - name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: Moodle(TM) LMS is an open source online Learning Management System
+      widely used at universities, schools, and corporations. It is modular and highly
+      adaptable to any type of online learning.
+    digest: d07123af4e433da3fd3fb621bb566d01494f47da36f24419f3b9b09fecf05e45
+    home: https://bitnami.com
+    icon: https://bitnami.com/assets/stacks/moodle/img/moodle-stack-220x234.png
+    keywords:
+    - moodle
+    - learning
+    - php
+    maintainers:
+    - name: VMware, Inc.
+      url: https://github.com/bitnami/charts
+    name: moodle
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/moodle
+    urls:
+    - moodle/moodle-28.0.3.tgz
+    version: 28.0.3
+  - annotations:
+      category: E-Learning
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: 4.5.4
     created: "2024-08-27T19:28:18.1802706-05:00"
     dependencies:
     - condition: mariadb.enabled
