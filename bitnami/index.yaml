@@ -82,7 +82,7 @@ entries:
     description: Moodle(TM) LMS is an open source online Learning Management System
       widely used at universities, schools, and corporations. It is modular and highly
       adaptable to any type of online learning.
-    digest: d07123af4e433da3fd3fb621bb566d01494f47da36f24419f3b9b09fecf05e45
+    digest: ad278b90640960d7e1a72e9ffec8c6417931d25d8e7bd7d37bd299e99f929f35
     home: https://bitnami.com
     icon: https://bitnami.com/assets/stacks/moodle/img/moodle-stack-220x234.png
     keywords:

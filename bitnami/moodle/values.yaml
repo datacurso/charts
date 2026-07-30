@@ -461,7 +461,28 @@ customLivenessProbe: {}
 customReadinessProbe: {}
 ## @param lifecycleHooks LifecycleHook to set additional configuration at startup Evaluated as a template
 ##
-lifecycleHooks: ""
+lifecycleHooks:
+  postStart:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - |
+          CURL=$(command -v curl || echo /opt/bitnami/common/bin/curl)
+          H="{{ .Values.ingress.hostname }}"
+          for i in $(seq 1 30); do
+            "$CURL" -s -o /dev/null -H "Host: $H" -H "X-Forwarded-Proto: https" \
+              http://127.0.0.1:8080/lib/ajax/service-nologin.php && break
+            sleep 1
+          done
+          for p in /lib/ajax/service-nologin.php /login/index.php /; do
+            "$CURL" -s -o /dev/null -H "Host: $H" -H "X-Forwarded-Proto: https" \
+              "http://127.0.0.1:8080$p" || true
+          done
+          exit 0
+  preStop:
+    exec:
+      command: [ "/bin/sh", "-c", "sleep 10; apachectl -k graceful-stop" ]
 ## @param podAnnotations Pod annotations
 ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 ##
