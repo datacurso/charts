@@ -171,6 +171,24 @@ extraVolumes: []
 ## @param extraVolumeMounts Array of extra volume mounts to be added to the container (evaluated as template). Normally used with `extraVolumes`.
 ##
 extraVolumeMounts: []
+## @section Apache MPM (prefork) tuning - elasticidad de memoria
+## Monta un httpd-mpm.conf tuneado. Baja la memoria ociosa (ayuda a desescalar de noche) SIN
+## afectar la capacidad de examen: MaxRequestWorkers queda alto (250) y MaxSpareServers solo
+## recorta workers OCIOSOS (durante carga estan todos ocupados). maxConnectionsPerChild recicla
+## el worker cada N requests para acotar el crecimiento de memoria (0 en la imagen = nunca).
+apacheMpm:
+  ## @param apacheMpm.enabled Montar el httpd-mpm.conf tuneado (si false, usa el default de la imagen: MaxSpareServers 10, MaxConnectionsPerChild 0)
+  ##
+  enabled: true
+  ## @param apacheMpm.maxSpareServers Maximo de workers ociosos que Apache mantiene (imagen: 10). Bajar libera RAM sin carga.
+  ##
+  maxSpareServers: 5
+  ## @param apacheMpm.maxConnectionsPerChild Requests por worker antes de reciclarlo y liberar RAM (imagen: 0 = nunca). Alto = poco reciclado, exam-safe.
+  ##
+  maxConnectionsPerChild: 5000
+  ## @param apacheMpm.maxRequestWorkers [default: 250] Techo de workers por pod (dejar alto: capacidad de examen). Opcional, default 250.
+  ##
+  maxRequestWorkers: 250
 ## @param initContainers Extra init containers to add to the deployment
 ##
 initContainers: []

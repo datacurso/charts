@@ -1,0 +1,73 @@
+{{- if .Values.apacheMpm.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-apache-mpm" (include "common.names.fullname" .) }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+data:
+  httpd-mpm.conf: |
+    #
+    # Server-Pool Management (MPM specific) - tuneado por el chart (.Values.apacheMpm)
+    #
+    <IfModule !mpm_netware_module>
+        PidFile "logs/httpd.pid"
+    </IfModule>
+
+    # prefork MPM (el ACTIVO con mod_php)
+    <IfModule mpm_prefork_module>
+        StartServers             {{ min 3 (int .Values.apacheMpm.maxSpareServers) }}
+        MinSpareServers          {{ min 3 (int .Values.apacheMpm.maxSpareServers) }}
+        MaxSpareServers         {{ int .Values.apacheMpm.maxSpareServers }}
+        MaxRequestWorkers      {{ int (.Values.apacheMpm.maxRequestWorkers | default 250) }}
+        MaxConnectionsPerChild   {{ int .Values.apacheMpm.maxConnectionsPerChild }}
+    </IfModule>
+
+    # worker MPM (inactivo con mod_php)
+    <IfModule mpm_worker_module>
+        StartServers             3
+        MinSpareThreads         75
+        MaxSpareThreads        250
+        ThreadsPerChild         25
+        MaxRequestWorkers      400
+        MaxConnectionsPerChild   0
+    </IfModule>
+
+    # event MPM (inactivo con mod_php)
+    <IfModule mpm_event_module>
+        StartServers             3
+        MinSpareThreads         75
+        MaxSpareThreads        250
+        ThreadsPerChild         25
+        MaxRequestWorkers      400
+        MaxConnectionsPerChild   0
+    </IfModule>
+
+    <IfModule mpm_netware_module>
+        ThreadStackSize      65536
+        StartThreads           250
+        MinSpareThreads         25
+        MaxSpareThreads        250
+        MaxThreads            1000
+        MaxConnectionsPerChild   0
+    </IfModule>
+
+    <IfModule mpm_mpmt_os2_module>
+        StartServers             2
+        MinSpareThreads          5
+        MaxSpareThreads         10
+        MaxConnectionsPerChild   0
+    </IfModule>
+
+    <IfModule mpm_winnt_module>
+        ThreadsPerChild        150
+        MaxConnectionsPerChild   0
+    </IfModule>
+
+    <IfModule !mpm_netware_module>
+        MaxMemFree            2048
+    </IfModule>
+    <IfModule mpm_netware_module>
+        MaxMemFree             100
+    </IfModule>
+{{- end }}
