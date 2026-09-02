@@ -66,9 +66,46 @@ entries:
   - annotations:
       category: E-Learning
       licenses: Apache-2.0
+      tanzuCategory: application
     apiVersion: v2
     appVersion: 4.5.4
-    created: "2026-08-06T12:41:00-05:00"
+    created: "2026-09-02T12:55:11.408439257-05:00"
+    dependencies:
+    - condition: mariadb.enabled
+      name: mariadb
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 22.x.x
+    - name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: Moodle(TM) LMS is an open source online Learning Management System
+      widely used at universities, schools, and corporations. It is modular and highly
+      adaptable to any type of online learning.
+    digest: 5e8ddd32159ba44c9cbb6dc121c003a0e5aa565a575f33703cae1538f8276d53
+    home: https://bitnami.com
+    icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
+    keywords:
+    - moodle
+    - learning
+    - php
+    maintainers:
+    - name: Broadcom, Inc. All Rights Reserved.
+      url: https://github.com/bitnami/charts
+    name: moodle
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/moodle
+    urls:
+    - moodle/moodle-28.0.6.tgz
+    version: 28.0.6
+  - annotations:
+      category: E-Learning
+      licenses: Apache-2.0
+      tanzuCategory: application
+    apiVersion: v2
+    appVersion: 4.5.4
+    created: "2026-09-02T12:55:11.311103728-05:00"
     dependencies:
     - condition: mariadb.enabled
       name: mariadb
@@ -84,13 +121,13 @@ entries:
       adaptable to any type of online learning.
     digest: 229b98250acbd3ca10753b7941721fba0d34dd470bc594a61c48809454f0dd46
     home: https://bitnami.com
-    icon: https://bitnami.com/assets/stacks/moodle/img/moodle-stack-220x234.png
+    icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
     keywords:
     - moodle
     - learning
     - php
     maintainers:
-    - name: VMware, Inc.
+    - name: Broadcom, Inc. All Rights Reserved.
       url: https://github.com/bitnami/charts
     name: moodle
     sources:
@@ -101,9 +138,10 @@ entries:
   - annotations:
       category: E-Learning
       licenses: Apache-2.0
+      tanzuCategory: application
     apiVersion: v2
     appVersion: 4.5.4
-    created: "2026-08-03T17:05:00-05:00"
+    created: "2026-09-02T12:55:11.290374402-05:00"
     dependencies:
     - condition: mariadb.enabled
       name: mariadb
@@ -119,13 +157,13 @@ entries:
       adaptable to any type of online learning.
     digest: 35da7aba6cc7baa839be049cf5b2049a1f1fa6d9d7e2c0a423401b11276dce3e
     home: https://bitnami.com
-    icon: https://bitnami.com/assets/stacks/moodle/img/moodle-stack-220x234.png
+    icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
     keywords:
     - moodle
     - learning
     - php
     maintainers:
-    - name: VMware, Inc.
+    - name: Broadcom, Inc. All Rights Reserved.
       url: https://github.com/bitnami/charts
     name: moodle
     sources:
@@ -136,9 +174,10 @@ entries:
   - annotations:
       category: E-Learning
       licenses: Apache-2.0
+      tanzuCategory: application
     apiVersion: v2
     appVersion: 4.5.4
-    created: "2026-07-30T14:15:00-05:00"
+    created: "2026-09-02T12:55:11.268030029-05:00"
     dependencies:
     - condition: mariadb.enabled
       name: mariadb
@@ -154,13 +193,13 @@ entries:
       adaptable to any type of online learning.
     digest: ad278b90640960d7e1a72e9ffec8c6417931d25d8e7bd7d37bd299e99f929f35
     home: https://bitnami.com
-    icon: https://bitnami.com/assets/stacks/moodle/img/moodle-stack-220x234.png
+    icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
     keywords:
     - moodle
     - learning
     - php
     maintainers:
-    - name: VMware, Inc.
+    - name: Broadcom, Inc. All Rights Reserved.
       url: https://github.com/bitnami/charts
     name: moodle
     sources:
@@ -171,9 +210,10 @@ entries:
   - annotations:
       category: E-Learning
       licenses: Apache-2.0
+      tanzuCategory: application
     apiVersion: v2
     appVersion: 4.5.4
-    created: "2024-08-27T19:28:18.1802706-05:00"
+    created: "2026-09-02T12:55:11.245945483-05:00"
     dependencies:
     - condition: mariadb.enabled
       name: mariadb
@@ -187,15 +227,15 @@ entries:
     description: Moodle(TM) LMS is an open source online Learning Management System
       widely used at universities, schools, and corporations. It is modular and highly
       adaptable to any type of online learning.
-    digest: b9be1b6221edc1c9cf642f787f05ddf584294b9bc94a47079997964f7a84f05e
+    digest: c516b7f464ddf16a0c4b8a0c5e6640785cea8ab7701e5e7916f06e3191637040
     home: https://bitnami.com
-    icon: https://bitnami.com/assets/stacks/moodle/img/moodle-stack-220x234.png
+    icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
     keywords:
     - moodle
     - learning
     - php
     maintainers:
-    - name: VMware, Inc.
+    - name: Broadcom, Inc. All Rights Reserved.
       url: https://github.com/bitnami/charts
     name: moodle
     sources:
@@ -206,37 +246,80 @@ entries:
   - annotations:
       category: E-Learning
       licenses: Apache-2.0
+      tanzuCategory: application
     apiVersion: v2
-    appVersion: 4.1.2
-    created: "2024-08-27T19:28:18.1776164-05:00"
+    appVersion: 4.5.4
+    created: "2026-09-02T12:55:11.201522269-05:00"
     dependencies:
     - condition: mariadb.enabled
       name: mariadb
-      repository: https://charts.bitnami.com/bitnami
-      version: 11.x.x
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 22.x.x
     - name: common
-      repository: https://charts.bitnami.com/bitnami
+      repository: oci://registry-1.docker.io/bitnamicharts
       tags:
       - bitnami-common
       version: 2.x.x
     description: Moodle(TM) LMS is an open source online Learning Management System
       widely used at universities, schools, and corporations. It is modular and highly
       adaptable to any type of online learning.
-    digest: ffd13b3061d76e18d32001c36b19e7d732632b5d994ceb8440daccf167bb7a10
-    home: https://github.com/bitnami/charts/tree/main/bitnami/moodle
-    icon: https://bitnami.com/assets/stacks/moodle/img/moodle-stack-220x234.png
+    digest: e55b0684fd139954bb91f08e1bb571bf5b1cb145d4937434895ac8938265aead
+    home: https://bitnami.com
+    icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
     keywords:
     - moodle
     - learning
     - php
     maintainers:
-    - name: Bitnami
+    - name: Broadcom, Inc. All Rights Reserved.
       url: https://github.com/bitnami/charts
     name: moodle
     sources:
-    - https://github.com/bitnami/containers/tree/main/bitnami/moodle
-    - https://www.moodle.org/
+    - https://github.com/bitnami/charts/tree/main/bitnami/moodle
+    urls:
+    - moodle/moodle-28.0.1.tgz
+    version: 28.0.1
+  - annotations:
+      category: E-Learning
+      images: |
+        - name: apache-exporter
+          image: docker.io/bitnami/apache-exporter:1.0.10-debian-12-r55
+        - name: moodle
+          image: docker.io/bitnami/moodle:4.5.4-debian-12-r0
+        - name: os-shell
+          image: docker.io/bitnami/os-shell:12-debian-12-r50
+      licenses: Apache-2.0
+      tanzuCategory: application
+    apiVersion: v2
+    appVersion: 4.5.4
+    created: "2026-09-02T12:55:11.172712813-05:00"
+    dependencies:
+    - condition: mariadb.enabled
+      name: mariadb
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 22.x.x
+    - name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: Moodle(TM) LMS is an open source online Learning Management System
+      widely used at universities, schools, and corporations. It is modular and highly
+      adaptable to any type of online learning.
+    digest: 69026788ded4dee67f6a65cc5aac95153e959e9aaf2cf8a941a926f2910526da
+    home: https://bitnami.com
+    icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
+    keywords:
+    - moodle
+    - learning
+    - php
+    maintainers:
+    - name: Broadcom, Inc. All Rights Reserved.
+      url: https://github.com/bitnami/charts
+    name: moodle
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/moodle
     urls:
     - moodle/moodle-28.0.0.tgz
     version: 28.0.0
-generated: "2024-08-27T19:28:18.1719178-05:00"
+generated: "2026-09-02T12:55:11.150093433-05:00"
