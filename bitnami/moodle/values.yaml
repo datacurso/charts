@@ -180,6 +180,12 @@ apacheMpm:
   ## @param apacheMpm.enabled Montar el httpd-mpm.conf tuneado (si false, usa el default de la imagen: MaxSpareServers 10, MaxConnectionsPerChild 0)
   ##
   enabled: true
+  ## @param apacheMpm.startServers Workers que Apache arranca al iniciar el pod (imagen: 5). Subir acorta el arranque en frio.
+  ##
+  startServers: 3
+  ## @param apacheMpm.minSpareServers Minimo de workers ociosos. Apache forkea cuando baja de este piso, y forkea en rampa (1,2,4,8,16,32/s): un piso bajo encola requests en los picos.
+  ##
+  minSpareServers: 3
   ## @param apacheMpm.maxSpareServers Maximo de workers ociosos que Apache mantiene (imagen: 10). Bajar libera RAM sin carga.
   ##
   maxSpareServers: 5

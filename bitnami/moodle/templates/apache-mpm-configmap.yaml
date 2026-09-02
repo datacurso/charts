@@ -16,8 +16,8 @@ data:
 
     # prefork MPM (el ACTIVO con mod_php)
     <IfModule mpm_prefork_module>
-        StartServers             {{ min 3 (int .Values.apacheMpm.maxSpareServers) }}
-        MinSpareServers          {{ min 3 (int .Values.apacheMpm.maxSpareServers) }}
+        StartServers             {{ int (.Values.apacheMpm.startServers    | default 3) }}
+        MinSpareServers          {{ int (.Values.apacheMpm.minSpareServers | default 3) }}
         MaxSpareServers         {{ int .Values.apacheMpm.maxSpareServers }}
         MaxRequestWorkers      {{ int (.Values.apacheMpm.maxRequestWorkers | default 250) }}
         MaxConnectionsPerChild   {{ int .Values.apacheMpm.maxConnectionsPerChild }}
