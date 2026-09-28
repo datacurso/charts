@@ -104,6 +104,21 @@ replicaCount: 1
 ## @param autoscaling.maxReplicas Maximum number of Moodle&trade; replicas
 ## @param autoscaling.targetCPU Target CPU utilization percentage
 ## @param autoscaling.targetMemory Target Memory utilization percentage
+## @param autoscaling.behavior HPA scaling behavior (scaleUp/scaleDown policies and stabilization windows). Evaluated as a template
+## e.g:
+## behavior:
+##   scaleUp:
+##     stabilizationWindowSeconds: 60
+##     policies:
+##       - type: Pods
+##         value: 4
+##         periodSeconds: 60
+##   scaleDown:
+##     stabilizationWindowSeconds: 600
+##     policies:
+##       - type: Pods
+##         value: 2
+##         periodSeconds: 120
 ##
 autoscaling:
   enabled: false
@@ -111,6 +126,7 @@ autoscaling:
   maxReplicas: 10
   targetCPU: 80
   targetMemory: 80
+  behavior: {}
 ## @param moodleSkipInstall Skip Moodle&trade; installation wizard. Useful for migrations and restoring from SQL dump
 ## ref: https://github.com/bitnami/containers/tree/main/bitnami/moodle#configuration
 ##

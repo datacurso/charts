@@ -20,6 +20,9 @@ spec:
     name: {{ template "common.names.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  {{- if .Values.autoscaling.behavior }}
+  behavior: {{- include "common.tplvalues.render" (dict "value" .Values.autoscaling.behavior "context" $) | nindent 4 }}
+  {{- end }}
   metrics:
     {{- if .Values.autoscaling.targetCPU }}
     - type: Resource
