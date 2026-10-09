@@ -27,6 +27,9 @@ spec:
       labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        {{- if .Values.apacheMpm.enabled }}
+        checksum/apache-mpm: {{ include (print $.Template.BasePath "/apache-mpm-configmap.yaml") . | sha256sum }}
+        {{- end }}
         {{- if .Values.podAnnotations }}
         {{- include "common.tplvalues.render" (dict "value" .Values.podAnnotations "context" $) | nindent 8 }}
         {{- end }}
@@ -298,8 +301,9 @@ spec:
           volumeMounts:
             {{- if .Values.apacheMpm.enabled }}
             - name: apache-mpm
-              mountPath: /opt/bitnami/apache/conf/extra/httpd-mpm.conf
+              mountPath: /opt/bitnami/apache/conf/vhosts/00_mpm.conf
               subPath: httpd-mpm.conf
+              readOnly: true
             {{- end }}
             # - name: moodle-data
             #   mountPath: /bitnami/moodle
