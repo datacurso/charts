@@ -211,6 +211,53 @@ apacheMpm:
   ## @param apacheMpm.maxRequestWorkers [default: 250] Techo de workers por pod (dejar alto: capacidad de examen). Opcional, default 250.
   ##
   maxRequestWorkers: 250
+  ## mpm_event (solo aplica con php.mode=fpm). Workers = threads livianos; NO son procesos PHP.
+  ## MaxRequestWorkers debe ser <= serverLimit * threadsPerChild.
+  ## @param apacheMpm.event.startServers Procesos Apache al iniciar
+  ## @param apacheMpm.event.serverLimit Máximo de procesos Apache
+  ## @param apacheMpm.event.threadsPerChild Threads por proceso
+  ## @param apacheMpm.event.maxRequestWorkers Conexiones simultáneas (keep-alive/estáticos incluidos)
+  ## @param apacheMpm.event.minSpareThreads Threads ociosos mínimos
+  ## @param apacheMpm.event.maxSpareThreads Threads ociosos máximos
+  ## @param apacheMpm.event.maxConnectionsPerChild Reciclado de procesos (0 = nunca)
+  ##
+  event:
+    startServers: 2
+    serverLimit: 16
+    threadsPerChild: 25
+    maxRequestWorkers: 400
+    minSpareThreads: 25
+    maxSpareThreads: 75
+    maxConnectionsPerChild: 0
+## @section PHP execution mode (imagen BuenData moodle-base debian-13)
+## La imagen moodle-base trae mod_php y PHP-FPM; el modo se elige en cada arranque con PHP_MODE.
+## Volver atrás = cambiar php.mode y re-sincronizar (sin rebuild). Imágenes Bitnami viejas lo ignoran.
+php:
+  ## @param php.mode modphp (Apache prefork + mod_php, default) | fpm (Apache event + PHP-FPM)
+  ##
+  mode: modphp
+  fpm:
+    ## @param php.fpm.pm Gestor de procesos FPM: dynamic | static | ondemand
+    ##
+    pm: dynamic
+    ## @param php.fpm.maxChildren Procesos PHP simultáneos por pod (= requests PHP en paralelo). Dimensionar con la memoria del pod: maxChildren * memoria_media_por_request < limits.memory
+    ##
+    maxChildren: 20
+    ## @param php.fpm.startServers Procesos PHP al iniciar
+    ##
+    startServers: 4
+    ## @param php.fpm.minSpareServers Procesos PHP ociosos mínimos
+    ##
+    minSpareServers: 2
+    ## @param php.fpm.maxSpareServers Procesos PHP ociosos máximos
+    ##
+    maxSpareServers: 6
+    ## @param php.fpm.maxRequests Reciclar cada proceso PHP tras N requests (acota fugas de memoria)
+    ##
+    maxRequests: 500
+    ## @param php.fpm.proxyTimeout Segundos que Apache espera a PHP. Vacío = PHP_MAX_EXECUTION_TIME (o 300)
+    ##
+    proxyTimeout: ""
 ## @param initContainers Extra init containers to add to the deployment
 ##
 initContainers: []

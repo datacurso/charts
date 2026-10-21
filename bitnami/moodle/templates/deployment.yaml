@@ -232,6 +232,29 @@ spec:
             - name: SMTP_PROTOCOL
               value: {{ .Values.smtpProtocol | quote }}
             {{- end }}
+            {{- $php := .Values.php | default dict }}
+            {{- $phpMode := $php.mode | default "modphp" }}
+            - name: PHP_MODE
+              value: {{ $phpMode | quote }}
+            {{- if eq $phpMode "fpm" }}
+            {{- $fpm := $php.fpm | default dict }}
+            - name: PHP_FPM_PM
+              value: {{ $fpm.pm | default "dynamic" | quote }}
+            - name: PHP_FPM_PM_MAX_CHILDREN
+              value: {{ $fpm.maxChildren | default 20 | quote }}
+            - name: PHP_FPM_PM_START_SERVERS
+              value: {{ $fpm.startServers | default 4 | quote }}
+            - name: PHP_FPM_PM_MIN_SPARE_SERVERS
+              value: {{ $fpm.minSpareServers | default 2 | quote }}
+            - name: PHP_FPM_PM_MAX_SPARE_SERVERS
+              value: {{ $fpm.maxSpareServers | default 6 | quote }}
+            - name: PHP_FPM_PM_MAX_REQUESTS
+              value: {{ $fpm.maxRequests | default 500 | quote }}
+            {{- if $fpm.proxyTimeout }}
+            - name: PHP_FPM_PROXY_TIMEOUT
+              value: {{ $fpm.proxyTimeout | quote }}
+            {{- end }}
+            {{- end }}
             {{- if .Values.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.extraEnvVars "context" $) | nindent 12 }}
             {{- end }}

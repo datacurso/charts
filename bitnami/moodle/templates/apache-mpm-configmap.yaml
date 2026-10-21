@@ -17,13 +17,26 @@ data:
     # Sin PidFile: Bitnami usa APACHE_PID_FILE (var/run/httpd.pid) en libapache.sh;
     # redefinirlo aca desincroniza is_apache_running/apache_stop.
     #
-    # Solo prefork: es el MPM activo con mod_php.
+    # prefork: MPM activo con php.mode=modphp (mod_php).
+    # event:   MPM activo con php.mode=fpm (imagen moodle-base debian-13). Los workers de
+    #          Apache son threads livianos; la concurrencia PHP real es php.fpm.maxChildren.
+    # Apache solo aplica el bloque del MPM cargado; el otro se ignora.
     <IfModule mpm_prefork_module>
         StartServers             {{ int (.Values.apacheMpm.startServers    | default 3) }}
         MinSpareServers          {{ int (.Values.apacheMpm.minSpareServers | default 3) }}
         MaxSpareServers          {{ int .Values.apacheMpm.maxSpareServers }}
         MaxRequestWorkers        {{ int (.Values.apacheMpm.maxRequestWorkers | default 250) }}
         MaxConnectionsPerChild   {{ int .Values.apacheMpm.maxConnectionsPerChild }}
+    </IfModule>
+    {{- $ev := .Values.apacheMpm.event | default dict }}
+    <IfModule mpm_event_module>
+        StartServers             {{ int ($ev.startServers      | default 2) }}
+        ServerLimit              {{ int ($ev.serverLimit       | default 16) }}
+        ThreadsPerChild          {{ int ($ev.threadsPerChild   | default 25) }}
+        MaxRequestWorkers        {{ int ($ev.maxRequestWorkers | default 400) }}
+        MinSpareThreads          {{ int ($ev.minSpareThreads   | default 25) }}
+        MaxSpareThreads          {{ int ($ev.maxSpareThreads   | default 75) }}
+        MaxConnectionsPerChild   {{ int ($ev.maxConnectionsPerChild | default 0) }}
     </IfModule>
 
     MaxMemFree               2048

@@ -1,5 +1,10 @@
 # Changelog
 
+## 29.0.0 (2026-10-21)
+
+* [bitnami/moodle] php.mode (modphp|fpm) y php.fpm.* para la imagen BuenData moodle-base debian-13 (Apache event + PHP-FPM). Default modphp: sin cambios de comportamiento.
+* [bitnami/moodle] apacheMpm.event.*: bloque mpm_event en el ConfigMap de MPM (ignorado con prefork).
+
 ## 28.0.0 (2025-08-18)
 
 * [bitnami/moodle] Upgrade to MariaDB 12.0 ([#36117](https://github.com/bitnami/charts/pull/36117))
