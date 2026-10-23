@@ -326,6 +326,15 @@ You may want to review the [PV reclaim policy](https://kubernetes.io/docs/tasks/
 | `ingress.secrets`                  | If you're providing your own certificates, please use this to add the certificates as secrets                                    | `[]`                     |
 | `ingress.ingressClassName`         | IngressClass that will be be used to implement the Ingress (Kubernetes 1.18+)                                                    | `""`                     |
 | `ingress.extraRules`               | Additional rules to be covered with this ingress record                                                                          | `[]`                     |
+| `httpRoute.enabled`                | Create a Gateway API HTTPRoute to the Moodle Service (optional, off by default)                                                  | `false`                  |
+| `httpRoute.parentRefs`             | Gateways the route attaches to (required when enabled)                                                                           | `[]`                     |
+| `httpRoute.hostnames`              | Route hostnames. Empty = `ingress.hostname` + `ingress.extraHosts[].name`                                                        | `[]`                     |
+| `httpRoute.path`                   | Path prefix of the main rule                                                                                                     | `/`                      |
+| `httpRoute.timeouts`               | Timeouts of the main rule (Envoy defaults to 15s total without `request`)                                                        | `{request: 6000s}`       |
+| `httpRoute.annotations`            | Additional annotations for the HTTPRoute                                                                                         | `{}`                     |
+| `httpRoute.extraRules`             | Additional HTTPRoute rules (evaluated as template)                                                                               | `[]`                     |
+| `backendTrafficPolicy.enabled`     | Create an Envoy Gateway BackendTrafficPolicy targeting the HTTPRoute (requires `httpRoute.enabled`)                              | `false`                  |
+| `backendTrafficPolicy.spec`        | Policy spec without targetRefs (evaluated as template)                                                                           | `{timeout.tcp.connectTimeout: 10s}` |
 
 ### Database parameters
 

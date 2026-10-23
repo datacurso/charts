@@ -1,0 +1,26 @@
+{{- /*
+Envoy Gateway BackendTrafficPolicy (datacurso fork, 28.0.9). Opcional: backendTrafficPolicy.enabled.
+*/}}
+
+{{- if .Values.backendTrafficPolicy.enabled }}
+{{- if not .Values.httpRoute.enabled }}
+{{- fail "backendTrafficPolicy.enabled requiere httpRoute.enabled=true (el policy apunta al HTTPRoute)" }}
+{{- end }}
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: {{ include "common.names.fullname" . }}
+  {{- with .Values.backendTrafficPolicy.spec }}
+  {{- include "common.tplvalues.render" ( dict "value" . "context" $ ) | nindent 2 }}
+  {{- end }}
+{{- end }}

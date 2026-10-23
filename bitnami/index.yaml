@@ -69,6 +69,42 @@ entries:
       tanzuCategory: application
     apiVersion: v2
     appVersion: 4.5.4
+    created: "2026-10-23T16:51:52.688174139Z"
+    dependencies:
+    - condition: mariadb.enabled
+      name: mariadb
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 22.x.x
+    - name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: Moodle(TM) LMS is an open source online Learning Management System
+      widely used at universities, schools, and corporations. It is modular and highly
+      adaptable to any type of online learning.
+    digest: 81be612f8f188bdc04e195f3b30c77c3ef73e21b02384cfe9cbc143563649558
+    home: https://bitnami.com
+    icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
+    keywords:
+    - moodle
+    - learning
+    - php
+    maintainers:
+    - name: Broadcom, Inc. All Rights Reserved.
+      url: https://github.com/bitnami/charts
+    name: moodle
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/moodle
+    urls:
+    - moodle/moodle-28.0.9.tgz
+    version: 28.0.9
+  - annotations:
+      category: E-Learning
+      licenses: Apache-2.0
+      tanzuCategory: application
+    apiVersion: v2
+    appVersion: 4.5.4
     created: "2026-10-08T21:53:07.913158208-05:00"
     dependencies:
     - condition: mariadb.enabled
@@ -394,4 +430,4 @@ entries:
     urls:
     - moodle/moodle-28.0.0.tgz
     version: 28.0.0
-generated: "2026-10-08T21:53:07.903871355-05:00"
+generated: "2026-10-23T16:51:52.678397954Z"

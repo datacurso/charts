@@ -194,8 +194,11 @@ extraVolumeMounts: []
 ## el worker cada N requests para acotar el crecimiento de memoria (0 en la imagen = nunca).
 apacheMpm:
   ## @param apacheMpm.enabled Montar el httpd-mpm.conf tuneado (si false, usa el default de la imagen: MaxSpareServers 10, MaxConnectionsPerChild 0)
+  ## OPT-IN desde 28.0.9: un sitio que sube de version sin definir apacheMpm sigue con el
+  ## comportamiento de la imagen, que es lo que corrio siempre hasta 28.0.7 (el archivo se
+  ## montaba pero Apache nunca lo leia). Activarlo es una decision por sitio, no un efecto del bump.
   ##
-  enabled: true
+  enabled: false
   ## @param apacheMpm.startServers Workers que Apache arranca al iniciar el pod (imagen: 5). Subir acorta el arranque en frio.
   ##
   startServers: 3
@@ -702,6 +705,57 @@ ingress:
   ##             name: http
   ##
   extraRules: []
+## Gateway API (reemplazo de ingress-nginx). OPCIONAL: con httpRoute.enabled=false el render es
+## identico al de 28.0.8. Puede convivir con el Ingress durante la migracion: cada uno vive en un
+## ELB distinto y el CDN decide a cual manda el trafico.
+## ref: https://gateway-api.sigs.k8s.io/api-types/httproute/
+##
+httpRoute:
+  ## @param httpRoute.enabled Crear un HTTPRoute hacia el Service de Moodle
+  ##
+  enabled: false
+  ## @param httpRoute.parentRefs Gateways a los que se cuelga la ruta (obligatorio con enabled=true)
+  ## Sin sectionName la ruta se cuelga de todos los listeners del Gateway (http y https).
+  ## e.g:
+  ## parentRefs:
+  ##   - name: sepi-gw
+  ##     namespace: sabana
+  ##
+  parentRefs: []
+  ## @param httpRoute.hostnames Hostnames de la ruta. Vacio = ingress.hostname + ingress.extraHosts[].name
+  ##
+  hostnames: []
+  ## @param httpRoute.path Prefijo de path de la regla principal
+  ##
+  path: /
+  ## @param httpRoute.timeouts Timeouts de la regla principal
+  ## Envoy corta una ruta a los 15 s TOTALES si no se define request: subidas grandes, backups y
+  ## reportes se cortan. 6000s iguala el proxy-read-timeout que usan los Ingress de nginx.
+  ##
+  timeouts:
+    request: 6000s
+  ## @param httpRoute.annotations Anotaciones adicionales del HTTPRoute
+  ##
+  annotations: {}
+  ## @param httpRoute.extraRules Reglas adicionales del HTTPRoute (evaluated as template)
+  ##
+  extraRules: []
+## Lado backend (Envoy -> pods) de la ruta. Especifico de Envoy Gateway: solo aplica si el
+## Gateway es de la GatewayClass de Envoy Gateway.
+## ref: https://gateway.envoyproxy.io/docs/api/extension_types/#backendtrafficpolicy
+##
+backendTrafficPolicy:
+  ## @param backendTrafficPolicy.enabled Crear un BackendTrafficPolicy apuntado al HTTPRoute (requiere httpRoute.enabled)
+  ##
+  enabled: false
+  ## @param backendTrafficPolicy.spec [object] Spec del policy SIN targetRefs (el chart lo apunta al HTTPRoute; evaluated as template)
+  ## connectTimeout 10s: abrir un TCP dentro del cluster tarda milisegundos; nginx tenia 6000 s y un
+  ## pod colgado retenia la request 100 minutos.
+  ##
+  spec:
+    timeout:
+      tcp:
+        connectTimeout: 10s
 ## @section Database parameters
 
 ## MariaDB chart configuration
