@@ -754,6 +754,39 @@ httpRoute:
   ## contra otro origen; la pagina solo la ve el usuario si fallan todos.
   ##
   unavailablePage: false
+  ## Challenges HTTP-01 de Let's Encrypt (cert-manager). ENCENDIDO por defecto en todo sitio con
+  ## httpRoute: /.well-known/acme-challenge/ va a un Service fijo de plataforma (acme-solver) y no a
+  ## Moodle, en TODOS los modos (la renovacion sigue en mantenimiento/suspension). La plataforma decide
+  ## a donde apunta ese Service (BUENDATA/Cluster/Edges/acme):
+  ##   - mientras exista nginx: al ingress-nginx de production, que atiende los Ingress solver de
+  ##     clase "nginx" de todos los namespaces -> el challenge funciona entre por nginx o por el edge.
+  ##   - despues: cert-manager con solver gatewayHTTPRoute crea una ruta con el path EXACTO del token,
+  ##     que en Gateway API le gana a este PathPrefix. Sin cambios en los sitios.
+  ## Moodle no usa ese path. Para sitios fuera de esta plataforma: enabled=false.
+  ##
+  acmeChallenge:
+    ## @param httpRoute.acmeChallenge.enabled Enviar /.well-known/acme-challenge/ al Service de la plataforma
+    ##
+    enabled: true
+    ## @param httpRoute.acmeChallenge.serviceName Service destino de los challenges
+    ##
+    serviceName: acme-solver
+    ## @param httpRoute.acmeChallenge.serviceNamespace Namespace del Service (otro namespace requiere ReferenceGrant alla)
+    ##
+    serviceNamespace: production
+    ## @param httpRoute.acmeChallenge.port Puerto del Service
+    ##
+    port: 80
+  ## Certificado de Let's Encrypt cuando el Ingress se apaga. AUTOMATICO: si el sitio tiene hoy
+  ## certificado (ingress.tls + anotacion cert-manager.io/cluster-issuer o issuer), al poner
+  ## ingress.enabled=false el chart crea un Certificate equivalente (mismo Secret <hostname>-tls,
+  ## mismos hosts, mismo issuer). Sin esto, el Certificate de ingress-shim se borra con el Ingress y
+  ## la renovacion se detiene (y los sitios con cdnSync publican un certificado que vence).
+  ##
+  certificate:
+    ## @param httpRoute.certificate.enabled Crear el Certificate propio al apagar el Ingress
+    ##
+    enabled: true
   ## CONTENIDO de las paginas (marca y textos). Convencion: cada sitio lo define en un archivo propio
   ## `pages.yaml` junto a su values.yaml (cargado por ArgoCD con helm.valueFiles), y en values.yaml
   ## solo activa: httpRoute.mode / httpRoute.unavailablePage. Solo se renderiza la pagina en uso.

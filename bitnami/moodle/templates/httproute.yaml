@@ -1,6 +1,7 @@
 {{- /*
 Gateway API HTTPRoute (datacurso fork, 28.0.9). Opcional: httpRoute.enabled.
 28.0.10: httpRoute.mode (active por defecto) y hostnames sin duplicados.
+28.0.11: regla de challenges HTTP-01 de Let's Encrypt (httpRoute.acmeChallenge, encendida por defecto).
 */}}
 
 {{- if .Values.httpRoute.enabled }}
@@ -34,6 +35,21 @@ spec:
     - {{ . | quote }}
     {{- end }}
   rules:
+    {{- with .Values.httpRoute.acmeChallenge }}
+    {{- if .enabled }}
+    # Let's Encrypt HTTP-01 (28.0.11): en todos los modos, antes que cualquier pagina o regla.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /.well-known/acme-challenge/
+      backendRefs:
+        - name: {{ .serviceName }}
+          {{- if and .serviceNamespace (ne .serviceNamespace $.Release.Namespace) }}
+          namespace: {{ .serviceNamespace }}
+          {{- end }}
+          port: {{ .port }}
+    {{- end }}
+    {{- end }}
     {{- if eq $mode "active" }}
     - matches:
         - path:
