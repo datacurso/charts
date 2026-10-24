@@ -1,10 +1,16 @@
 {{- /*
 Envoy Gateway BackendTrafficPolicy (datacurso fork, 28.0.9). Opcional: backendTrafficPolicy.enabled.
+28.0.10: httpRoute.unavailablePage agrega un responseOverride para 502-504.
 */}}
 
-{{- if .Values.backendTrafficPolicy.enabled }}
+{{- $unavailable := and .Values.httpRoute.enabled .Values.httpRoute.unavailablePage }}
+{{- if or .Values.backendTrafficPolicy.enabled $unavailable }}
 {{- if not .Values.httpRoute.enabled }}
 {{- fail "backendTrafficPolicy.enabled requiere httpRoute.enabled=true (el policy apunta al HTTPRoute)" }}
+{{- end }}
+{{- $spec := ternary .Values.backendTrafficPolicy.spec (dict) .Values.backendTrafficPolicy.enabled }}
+{{- if and $unavailable (hasKey $spec "responseOverride") }}
+{{- fail "httpRoute.unavailablePage y backendTrafficPolicy.spec.responseOverride no se pueden usar juntos" }}
 {{- end }}
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: BackendTrafficPolicy
@@ -20,7 +26,45 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: {{ include "common.names.fullname" . }}
-  {{- with .Values.backendTrafficPolicy.spec }}
+  {{- with $spec }}
   {{- include "common.tplvalues.render" ( dict "value" . "context" $ ) | nindent 2 }}
   {{- end }}
+  {{- if $unavailable }}
+  # Sin statusCode: conserva el 502/503/504 original para que el CDN reintente contra otro origen.
+  responseOverride:
+    - match:
+        statusCodes:
+          - type: Range
+            range:
+              start: 502
+              end: 504
+      response:
+        contentType: text/html; charset=utf-8
+        body:
+          type: ValueRef
+          valueRef:
+            group: ""
+            kind: ConfigMap
+            name: {{ printf "%s-page-unavailable" (include "common.names.fullname" .) }}
+{{- end }}
+{{- end }}
+{{- if $unavailable }}
+---
+{{- /*
+responseOverride SI interpreta los command operators de Envoy (verificado: "%%" sale como "%"),
+asi que cada "%" del HTML se escapa como "%%". Sin esto, un "%" del CSS podria hacer que Envoy
+rechace la configuracion del edge.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-page-unavailable" (include "common.names.fullname" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: error-page
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  response.body: |-
+{{ include "moodle.httpRoute.page" (dict "kind" "unavailable" "context" $) | replace "%" "%%" | indent 4 }}
 {{- end }}

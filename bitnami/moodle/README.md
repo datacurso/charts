@@ -332,7 +332,20 @@ You may want to review the [PV reclaim policy](https://kubernetes.io/docs/tasks/
 | `httpRoute.path`                   | Path prefix of the main rule                                                                                                     | `/`                      |
 | `httpRoute.timeouts`               | Timeouts of the main rule (Envoy defaults to 15s total without `request`)                                                        | `{request: 6000s}`       |
 | `httpRoute.annotations`            | Additional annotations for the HTTPRoute                                                                                         | `{}`                     |
-| `httpRoute.extraRules`             | Additional HTTPRoute rules (evaluated as template)                                                                               | `[]`                     |
+| `httpRoute.extraRules`             | Additional HTTPRoute rules (evaluated as template). Only in mode `active`                                                        | `[]`                     |
+| `httpRoute.mode`                   | Site state: `active`, `maintenance` (503 page, no pods) or `suspended` (403 page, no pods). Empty or unset = `active`            | `active`                 |
+| `httpRoute.unavailablePage`        | Replace Envoy 502-504 (no ready pods, timeouts) with the site page, keeping the 5xx code                                         | `false`                  |
+| `httpRoute.pages.brand.name`       | Client name (page title). Empty = `ingress.hostname`                                                                             | `""`                     |
+| `httpRoute.pages.brand.logoUrl`    | https URL of the client logo (loaded by URL, not embedded)                                                                       | `""`                     |
+| `httpRoute.pages.brand.primaryColor` | Brand color, `#rgb` or `#rrggbb`. Darker/softer shades are derived with CSS `color-mix()`                                      | `#bd0b29`                |
+| `httpRoute.pages.brand.backgroundColor` | Page background color, `#rgb` or `#rrggbb`                                                                                  | `#000000`                |
+| `httpRoute.pages.brand.contactEmail` | Support email shown in the info box. Empty = hidden                                                                            | `""`                     |
+| `httpRoute.pages.brand.lang`       | HTML language                                                                                                                    | `es`                     |
+| `httpRoute.pages.<page>.*`         | `badge`, `title`, `message`, `infoTitle`, `infoMessage`, `waitingText`, `imageUrl` for `maintenance`, `suspended`, `unavailable` | see values               |
+| `httpRoute.pages.<page>.imageUrl`  | https URL of a client-designed image: the page shows ONLY that image (title + message as alt text)                               | `""`                     |
+| `httpRoute.pages.maintenance.retryAfter` | Seconds in the Retry-After header (0 = no header)                                                                          | `3600`                   |
+
+Convention: a site keeps `httpRoute.mode` / `httpRoute.unavailablePage` in its `values.yaml` and the page content (`httpRoute.pages`) in a separate `pages.yaml`, loaded by ArgoCD with `helm.valueFiles: [values.yaml, pages.yaml]` and `ignoreMissingValueFiles: true`. Pages are self-contained (no external CSS, JS or fonts); only `logoUrl` / `imageUrl` are fetched by the browser.
 | `backendTrafficPolicy.enabled`     | Create an Envoy Gateway BackendTrafficPolicy targeting the HTTPRoute (requires `httpRoute.enabled`)                              | `false`                  |
 | `backendTrafficPolicy.spec`        | Policy spec without targetRefs (evaluated as template)                                                                           | `{timeout.tcp.connectTimeout: 10s}` |
 

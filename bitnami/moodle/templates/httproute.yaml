@@ -1,10 +1,21 @@
 {{- /*
 Gateway API HTTPRoute (datacurso fork, 28.0.9). Opcional: httpRoute.enabled.
+28.0.10: httpRoute.mode (active por defecto) y hostnames sin duplicados.
 */}}
 
 {{- if .Values.httpRoute.enabled }}
 {{- if not .Values.httpRoute.parentRefs }}
 {{- fail "httpRoute.parentRefs es obligatorio cuando httpRoute.enabled=true" }}
+{{- end }}
+{{- $mode := include "moodle.httpRoute.mode" . }}
+{{- $hostnames := list }}
+{{- if .Values.httpRoute.hostnames }}
+{{- $hostnames = .Values.httpRoute.hostnames }}
+{{- else }}
+{{- $hostnames = append $hostnames .Values.ingress.hostname }}
+{{- range .Values.ingress.extraHosts }}
+{{- $hostnames = append $hostnames .name }}
+{{- end }}
 {{- end }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -19,17 +30,11 @@ metadata:
 spec:
   parentRefs: {{- include "common.tplvalues.render" ( dict "value" .Values.httpRoute.parentRefs "context" $ ) | nindent 4 }}
   hostnames:
-    {{- if .Values.httpRoute.hostnames }}
-    {{- range .Values.httpRoute.hostnames }}
+    {{- range ($hostnames | uniq) }}
     - {{ . | quote }}
     {{- end }}
-    {{- else }}
-    - {{ .Values.ingress.hostname | quote }}
-    {{- range .Values.ingress.extraHosts }}
-    - {{ .name | quote }}
-    {{- end }}
-    {{- end }}
   rules:
+    {{- if eq $mode "active" }}
     - matches:
         - path:
             type: PathPrefix
@@ -42,5 +47,18 @@ spec:
       {{- end }}
     {{- if .Values.httpRoute.extraRules }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.httpRoute.extraRules "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- else }}
+    # mode {{ $mode }}: todo el host responde la pagina, sin tocar los pods ni extraRules
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: {{ printf "%s-%s" (include "common.names.fullname" .) $mode }}
     {{- end }}
 {{- end }}

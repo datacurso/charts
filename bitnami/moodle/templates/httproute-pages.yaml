@@ -1,0 +1,59 @@
+{{- /*
+Paginas de mantenimiento / suspension (datacurso fork, 28.0.10).
+Solo se renderiza la del modo activo: en mode active no se crea nada y el
+render es identico a 28.0.9.
+
+directResponse lee el body LITERAL desde el ConfigMap (verificado: el CSS con
+"%" y hasta "%REQ(...)%" salen tal cual), asi que este HTML no se escapa.
+*/}}
+
+{{- if .Values.httpRoute.enabled }}
+{{- $mode := include "moodle.httpRoute.mode" . }}
+{{- if ne $mode "active" }}
+{{- $fullname := include "common.names.fullname" . }}
+{{- $page := index .Values.httpRoute.pages $mode }}
+{{- $code := ternary 503 403 (eq $mode "maintenance") }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-page-%s" $fullname $mode }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: error-page
+  annotations:
+    # antes que el HTTPRoute: la ruta nunca apunta a una pagina inexistente
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  response.body: |-
+{{ include "moodle.httpRoute.page" (dict "kind" $mode "context" $) | indent 4 }}
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: HTTPRouteFilter
+metadata:
+  name: {{ printf "%s-%s" $fullname $mode }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: error-page
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  directResponse:
+    statusCode: {{ $code }}
+    contentType: text/html; charset=utf-8
+    body:
+      type: ValueRef
+      valueRef:
+        group: ""
+        kind: ConfigMap
+        name: {{ printf "%s-page-%s" $fullname $mode }}
+    header:
+      add:
+        # el CDN no debe cachear la pagina: al volver a active el sitio aparece al instante
+        - name: Cache-Control
+          value: no-store
+        {{- if and (eq $mode "maintenance") (gt (int $page.retryAfter) 0) }}
+        - name: Retry-After
+          value: {{ int $page.retryAfter | quote }}
+        {{- end }}
+{{- end }}
+{{- end }}
