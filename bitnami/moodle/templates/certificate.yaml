@@ -1,0 +1,48 @@
+{{- /*
+cert-manager Certificate propio del sitio (datacurso fork, 28.0.11). Automatico.
+
+Mientras el Ingress existe, el Certificate lo crea ingress-shim y es PROPIEDAD
+del Ingress (ownerReference): al apagar el Ingress (ingress.enabled=false, fin
+de la migracion a Gateway API) Kubernetes lo borra y la renovacion se detiene.
+En sitios que publican el certificado en su CDN (cdnSync) eso deja el CDN con
+un certificado que vence.
+
+Este template crea un Certificate EQUIVALENTE en el mismo momento en que el
+Ingress se apaga: mismo Secret (<hostname>-tls), mismos hosts, mismo issuer
+(tomado de la anotacion cert-manager.io/cluster-issuer o cert-manager.io/issuer
+del Ingress). Solo aplica a sitios que hoy tienen certificado (ingress.tls +
+anotacion).
+
+MISMO NOMBRE que el de ingress-shim (<hostname>-tls), a proposito: cert-manager
+NO adopta un Secret emitido para otro Certificate ("Secret was issued for X...
+two conflicting Certificates") y la renovacion quedaria trabada (verificado).
+Secuencia real (verificada con cert-manager 1.18): al borrarse el Ingress, el GC
+borra el Certificate de ingress-shim; el Secret NO (no tiene dueño); ArgoCD
+(selfHeal) recrea este Certificate con el mismo nombre -> Ready sin reemitir.
+*/}}
+
+{{- $ann := .Values.ingress.annotations | default dict }}
+{{- $clusterIssuer := index $ann "cert-manager.io/cluster-issuer" | default "" }}
+{{- $issuer := index $ann "cert-manager.io/issuer" | default "" }}
+{{- if and .Values.httpRoute.enabled .Values.httpRoute.certificate.enabled (not .Values.ingress.enabled) .Values.ingress.tls (or $clusterIssuer $issuer) }}
+{{- $hosts := list .Values.ingress.hostname }}
+{{- range .Values.ingress.extraHosts }}
+{{- $hosts = append $hosts .name }}
+{{- end }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ printf "%s-tls" .Values.ingress.hostname }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: tls
+spec:
+  secretName: {{ printf "%s-tls" .Values.ingress.hostname }}
+  dnsNames:
+    {{- range ($hosts | uniq) }}
+    - {{ . | quote }}
+    {{- end }}
+  issuerRef:
+    kind: {{ ternary "ClusterIssuer" "Issuer" (ne $clusterIssuer "") }}
+    name: {{ default $issuer $clusterIssuer | quote }}
+{{- end }}

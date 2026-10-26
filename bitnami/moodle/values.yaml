@@ -194,8 +194,11 @@ extraVolumeMounts: []
 ## el worker cada N requests para acotar el crecimiento de memoria (0 en la imagen = nunca).
 apacheMpm:
   ## @param apacheMpm.enabled Montar el httpd-mpm.conf tuneado (si false, usa el default de la imagen: MaxSpareServers 10, MaxConnectionsPerChild 0)
+  ## OPT-IN desde 28.0.9: un sitio que sube de version sin definir apacheMpm sigue con el
+  ## comportamiento de la imagen, que es lo que corrio siempre hasta 28.0.7 (el archivo se
+  ## montaba pero Apache nunca lo leia). Activarlo es una decision por sitio, no un efecto del bump.
   ##
-  enabled: true
+  enabled: false
   ## @param apacheMpm.startServers Workers que Apache arranca al iniciar el pod (imagen: 5). Subir acorta el arranque en frio.
   ##
   startServers: 3
@@ -233,9 +236,12 @@ apacheMpm:
 ## La imagen moodle-base trae mod_php y PHP-FPM; el modo se elige en cada arranque con PHP_MODE.
 ## Volver atrás = cambiar php.mode y re-sincronizar (sin rebuild). Imágenes Bitnami viejas lo ignoran.
 php:
-  ## @param php.mode modphp (Apache prefork + mod_php, default) | fpm (Apache event + PHP-FPM)
+  ## @param php.mode modphp (Apache prefork + mod_php) | fpm (Apache event + PHP-FPM). Vacio = no se toca.
+  ## OPT-IN desde 29.0.1: vacio o ausente -> el chart NO inyecta PHP_MODE y el pod corre como
+  ## siempre (decide la imagen: las Bitnami usan mod_php, moodle-base su propio default). Solo si
+  ## se define, el chart lo fuerza. En 29.0.0 se inyectaba PHP_MODE=modphp aunque no se definiera.
   ##
-  mode: modphp
+  mode: ""
   fpm:
     ## @param php.fpm.pm Gestor de procesos FPM: dynamic | static | ondemand
     ##
@@ -749,6 +755,179 @@ ingress:
   ##             name: http
   ##
   extraRules: []
+## Gateway API (reemplazo de ingress-nginx). OPCIONAL: con httpRoute.enabled=false el render es
+## identico al de 28.0.8. Puede convivir con el Ingress durante la migracion: cada uno vive en un
+## ELB distinto y el CDN decide a cual manda el trafico.
+## ref: https://gateway-api.sigs.k8s.io/api-types/httproute/
+##
+httpRoute:
+  ## @param httpRoute.enabled Crear un HTTPRoute hacia el Service de Moodle
+  ##
+  enabled: false
+  ## @param httpRoute.parentRefs Gateways a los que se cuelga la ruta (obligatorio con enabled=true)
+  ## Sin sectionName la ruta se cuelga de todos los listeners del Gateway (http y https).
+  ## e.g:
+  ## parentRefs:
+  ##   - name: sepi-gw
+  ##     namespace: sabana
+  ##
+  parentRefs: []
+  ## @param httpRoute.hostnames Hostnames de la ruta. Vacio = ingress.hostname + ingress.extraHosts[].name
+  ##
+  hostnames: []
+  ## @param httpRoute.path Prefijo de path de la regla principal
+  ##
+  path: /
+  ## @param httpRoute.timeouts Timeouts de la regla principal
+  ## Envoy corta una ruta a los 15 s TOTALES si no se define request: subidas grandes, backups y
+  ## reportes se cortan. 6000s iguala el proxy-read-timeout que usan los Ingress de nginx.
+  ##
+  timeouts:
+    request: 6000s
+  ## @param httpRoute.annotations Anotaciones adicionales del HTTPRoute
+  ##
+  annotations: {}
+  ## @param httpRoute.extraRules Reglas adicionales del HTTPRoute (evaluated as template). Solo en mode active.
+  ##
+  extraRules: []
+  ## @param httpRoute.mode Estado del sitio: active | maintenance | suspended. Vacio o ausente = active.
+  ## active      -> trafico normal a los pods (identico a 28.0.9).
+  ## maintenance -> Envoy responde la pagina de mantenimiento SIN tocar los pods (503 + Retry-After).
+  ## suspended   -> Envoy responde la pagina de suspension SIN tocar los pods (403).
+  ## En maintenance/suspended se ignoran extraRules: una regla mas especifica no puede saltarse la pagina.
+  ## OJO durante la migracion: si el CDN todavia tiene el origen viejo (nginx) como respaldo, un 503
+  ## hace que el CDN reintente alla y muestre el sitio. El 403 de suspended no dispara reintento.
+  ##
+  mode: active
+  ## @param httpRoute.unavailablePage Reemplazar los 502-504 de Envoy (sin pods listos, pod caido, timeout)
+  ## por la pagina "unavailable" del sitio. Conserva el codigo 5xx para que el CDN siga reintentando
+  ## contra otro origen; la pagina solo la ve el usuario si fallan todos.
+  ##
+  unavailablePage: false
+  ## Challenges HTTP-01 de Let's Encrypt (cert-manager). ENCENDIDO por defecto en todo sitio con
+  ## httpRoute: /.well-known/acme-challenge/ va a un Service fijo de plataforma (acme-solver) y no a
+  ## Moodle, en TODOS los modos (la renovacion sigue en mantenimiento/suspension). La plataforma decide
+  ## a donde apunta ese Service (BUENDATA/Cluster/Edges/acme):
+  ##   - mientras exista nginx: al ingress-nginx de production, que atiende los Ingress solver de
+  ##     clase "nginx" de todos los namespaces -> el challenge funciona entre por nginx o por el edge.
+  ##   - despues: cert-manager con solver gatewayHTTPRoute crea una ruta con el path EXACTO del token,
+  ##     que en Gateway API le gana a este PathPrefix. Sin cambios en los sitios.
+  ## Moodle no usa ese path. Para sitios fuera de esta plataforma: enabled=false.
+  ##
+  acmeChallenge:
+    ## @param httpRoute.acmeChallenge.enabled Enviar /.well-known/acme-challenge/ al Service de la plataforma
+    ##
+    enabled: true
+    ## @param httpRoute.acmeChallenge.serviceName Service destino de los challenges
+    ##
+    serviceName: acme-solver
+    ## @param httpRoute.acmeChallenge.serviceNamespace Namespace del Service (otro namespace requiere ReferenceGrant alla)
+    ##
+    serviceNamespace: production
+    ## @param httpRoute.acmeChallenge.port Puerto del Service
+    ##
+    port: 80
+  ## Certificado de Let's Encrypt cuando el Ingress se apaga. AUTOMATICO: si el sitio tiene hoy
+  ## certificado (ingress.tls + anotacion cert-manager.io/cluster-issuer o issuer), al poner
+  ## ingress.enabled=false el chart crea un Certificate equivalente (mismo Secret <hostname>-tls,
+  ## mismos hosts, mismo issuer). Sin esto, el Certificate de ingress-shim se borra con el Ingress y
+  ## la renovacion se detiene (y los sitios con cdnSync publican un certificado que vence).
+  ##
+  certificate:
+    ## @param httpRoute.certificate.enabled Crear el Certificate propio al apagar el Ingress
+    ##
+    enabled: true
+  ## CONTENIDO de las paginas (marca y textos). Convencion: cada sitio lo define en un archivo propio
+  ## `pages.yaml` junto a su values.yaml (cargado por ArgoCD con helm.valueFiles), y en values.yaml
+  ## solo activa: httpRoute.mode / httpRoute.unavailablePage. Solo se renderiza la pagina en uso.
+  ## Diseno autocontenido: no carga recursos externos salvo logoUrl / imageUrl.
+  ##
+  pages:
+    brand:
+      ## @param httpRoute.pages.brand.name Nombre visible del cliente (titulo de la pestana). Vacio = ingress.hostname
+      ##
+      name: ""
+      ## @param httpRoute.pages.brand.logoUrl URL https del logo, arriba de la tarjeta. Vacio = sin logo
+      ##
+      logoUrl: ""
+      ## @param httpRoute.pages.brand.primaryColor Color de marca (#rgb o #rrggbb): badge, icono, puntos, degradado
+      ##
+      primaryColor: "#bd0b29"
+      ## @param httpRoute.pages.brand.backgroundColor Color de fondo de la pagina (#rgb o #rrggbb)
+      ##
+      backgroundColor: "#000000"
+      ## @param httpRoute.pages.brand.contactEmail Correo de soporte en el recuadro informativo. Vacio = no se muestra
+      ##
+      contactEmail: ""
+      ## @param httpRoute.pages.brand.lang Idioma del HTML
+      ##
+      lang: es
+    ## Cada pagina acepta imageUrl: si el cliente entrega su propia pieza grafica, la pagina SOLO muestra
+    ## esa imagen (https), con title + message como texto alternativo. Vacio = plantilla.
+    ##
+    maintenance:
+      ## @param httpRoute.pages.maintenance.badge Etiqueta superior
+      badge: Sistema en pausa
+      ## @param httpRoute.pages.maintenance.title Titulo
+      title: Sitio en Mantenimiento
+      ## @param httpRoute.pages.maintenance.message Mensaje principal
+      message: Estamos realizando tareas de actualización para mejorar el rendimiento y la seguridad de nuestro Campus Virtual.
+      ## @param httpRoute.pages.maintenance.infoTitle Titulo del recuadro informativo
+      infoTitle: ¿Qué está pasando?
+      ## @param httpRoute.pages.maintenance.infoMessage Texto del recuadro informativo
+      infoMessage: La plataforma volverá a estar disponible pronto. Tus datos y cursos están seguros. Te agradecemos tu paciencia mientras trabajamos.
+      ## @param httpRoute.pages.maintenance.waitingText Texto junto a los puntos animados (vacio = sin indicador)
+      waitingText: Preparando todo para tu regreso
+      ## @param httpRoute.pages.maintenance.imageUrl Imagen propia del cliente en lugar de la plantilla
+      imageUrl: ""
+      ## @param httpRoute.pages.maintenance.retryAfter Segundos en el header Retry-After (0 = no se envia)
+      retryAfter: 3600
+    suspended:
+      ## @param httpRoute.pages.suspended.badge Etiqueta superior
+      badge: Acceso suspendido
+      ## @param httpRoute.pages.suspended.title Titulo
+      title: Servicio suspendido
+      ## @param httpRoute.pages.suspended.message Mensaje principal
+      message: El acceso a esta plataforma se encuentra suspendido temporalmente.
+      ## @param httpRoute.pages.suspended.infoTitle Titulo del recuadro informativo
+      infoTitle: ¿Qué puedo hacer?
+      ## @param httpRoute.pages.suspended.infoMessage Texto del recuadro informativo
+      infoMessage: Para más información, comunícate con el administrador de tu institución.
+      ## @param httpRoute.pages.suspended.waitingText Texto junto a los puntos animados (vacio = sin indicador)
+      waitingText: ""
+      ## @param httpRoute.pages.suspended.imageUrl Imagen propia del cliente en lugar de la plantilla
+      imageUrl: ""
+    unavailable:
+      ## @param httpRoute.pages.unavailable.badge Etiqueta superior
+      badge: Servicio interrumpido
+      ## @param httpRoute.pages.unavailable.title Titulo
+      title: Volvemos en un momento
+      ## @param httpRoute.pages.unavailable.message Mensaje principal
+      message: La plataforma no está respondiendo en este momento. Ya estamos trabajando para restablecerla.
+      ## @param httpRoute.pages.unavailable.infoTitle Titulo del recuadro informativo
+      infoTitle: ¿Qué está pasando?
+      ## @param httpRoute.pages.unavailable.infoMessage Texto del recuadro informativo
+      infoMessage: Tus datos y cursos están seguros. Esta página se actualizará sola cuando el servicio vuelva.
+      ## @param httpRoute.pages.unavailable.waitingText Texto junto a los puntos animados (vacio = sin indicador)
+      waitingText: Reintentando
+      ## @param httpRoute.pages.unavailable.imageUrl Imagen propia del cliente en lugar de la plantilla
+      imageUrl: ""
+## Lado backend (Envoy -> pods) de la ruta. Especifico de Envoy Gateway: solo aplica si el
+## Gateway es de la GatewayClass de Envoy Gateway.
+## ref: https://gateway.envoyproxy.io/docs/api/extension_types/#backendtrafficpolicy
+##
+backendTrafficPolicy:
+  ## @param backendTrafficPolicy.enabled Crear un BackendTrafficPolicy apuntado al HTTPRoute (requiere httpRoute.enabled)
+  ##
+  enabled: false
+  ## @param backendTrafficPolicy.spec [object] Spec del policy SIN targetRefs (el chart lo apunta al HTTPRoute; evaluated as template)
+  ## connectTimeout 10s: abrir un TCP dentro del cluster tarda milisegundos; nginx tenia 6000 s y un
+  ## pod colgado retenia la request 100 minutos.
+  ##
+  spec:
+    timeout:
+      tcp:
+        connectTimeout: 10s
 ## @section Database parameters
 
 ## MariaDB chart configuration

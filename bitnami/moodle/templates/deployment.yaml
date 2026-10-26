@@ -233,9 +233,15 @@ spec:
               value: {{ .Values.smtpProtocol | quote }}
             {{- end }}
             {{- $php := .Values.php | default dict }}
-            {{- $phpMode := $php.mode | default "modphp" }}
+            {{- $phpMode := $php.mode | default "" | toString | lower }}
+            {{- if and $phpMode (not (has $phpMode (list "modphp" "fpm"))) }}
+            {{- fail (printf "php.mode=%q invalido: usar modphp, fpm o dejarlo vacio" $phpMode) }}
+            {{- end }}
+            {{- /* 29.0.1: PHP_MODE solo si se definio php.mode; vacio = decide la imagen (sin cambios) */}}
+            {{- if $phpMode }}
             - name: PHP_MODE
               value: {{ $phpMode | quote }}
+            {{- end }}
             {{- if eq $phpMode "fpm" }}
             {{- $fpm := $php.fpm | default dict }}
             - name: PHP_FPM_PM

@@ -1,5 +1,14 @@
 # Changelog
 
+## 29.0.1 (2026-10-26)
+
+Une v6 (28.0.9 a 28.0.11) con v7 (29.0.0). Version unica para todos los sitios.
+
+* [bitnami/moodle] Trae de v6: httpRoute (Gateway API) con parentRefs, httpRoute.mode (active|maintenance|suspended) y paginas propias, httpRoute.unavailablePage, httpRoute.acmeChallenge (HTTP-01 de Let's Encrypt por los edges), httpRoute.certificate (Certificate propio al apagar el Ingress), backendTrafficPolicy. Todo apagado salvo acmeChallenge/certificate, que solo actuan con httpRoute.enabled.
+* [bitnami/moodle] php.mode pasa a OPT-IN: vacio o ausente = el chart NO inyecta PHP_MODE y decide la imagen (como antes de 29.0.0). En 29.0.0 se inyectaba PHP_MODE=modphp siempre. Valor invalido = error de render.
+* [bitnami/moodle] apacheMpm.enabled queda en false (OPT-IN, como v6 28.0.9). OJO sitios que vienen de 29.0.0 sin definir apacheMpm (default true alli): definir apacheMpm.enabled=true para conservar su MPM.
+* [bitnami/moodle] Sitios que vienen de 28.0.5/28.0.6: desaparece el ConfigMap apache-mpm montado en conf/extra/httpd-mpm.conf. Sin efecto real: el Include de ese archivo esta comentado en httpd.conf de Bitnami (verificado en pods vivos), nunca se aplico. Si el sitio define apacheMpm.enabled=true, desde ahora SI se aplica (conf/vhosts/00_mpm.conf, desde 28.0.8): revisar maxRequestWorkers antes de subir.
+
 ## 29.0.0 (2026-10-21)
 
 * [bitnami/moodle] php.mode (modphp|fpm) y php.fpm.* para la imagen BuenData moodle-base debian-13 (Apache event + PHP-FPM). Default modphp: sin cambios de comportamiento.

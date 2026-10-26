@@ -326,6 +326,31 @@ You may want to review the [PV reclaim policy](https://kubernetes.io/docs/tasks/
 | `ingress.secrets`                  | If you're providing your own certificates, please use this to add the certificates as secrets                                    | `[]`                     |
 | `ingress.ingressClassName`         | IngressClass that will be be used to implement the Ingress (Kubernetes 1.18+)                                                    | `""`                     |
 | `ingress.extraRules`               | Additional rules to be covered with this ingress record                                                                          | `[]`                     |
+| `httpRoute.enabled`                | Create a Gateway API HTTPRoute to the Moodle Service (optional, off by default)                                                  | `false`                  |
+| `httpRoute.parentRefs`             | Gateways the route attaches to (required when enabled)                                                                           | `[]`                     |
+| `httpRoute.hostnames`              | Route hostnames. Empty = `ingress.hostname` + `ingress.extraHosts[].name`                                                        | `[]`                     |
+| `httpRoute.path`                   | Path prefix of the main rule                                                                                                     | `/`                      |
+| `httpRoute.timeouts`               | Timeouts of the main rule (Envoy defaults to 15s total without `request`)                                                        | `{request: 6000s}`       |
+| `httpRoute.annotations`            | Additional annotations for the HTTPRoute                                                                                         | `{}`                     |
+| `httpRoute.extraRules`             | Additional HTTPRoute rules (evaluated as template). Only in mode `active`                                                        | `[]`                     |
+| `httpRoute.mode`                   | Site state: `active`, `maintenance` (503 page, no pods) or `suspended` (403 page, no pods). Empty or unset = `active`            | `active`                 |
+| `httpRoute.acmeChallenge.enabled`  | Route `/.well-known/acme-challenge/` (Let's Encrypt HTTP-01) to the platform Service in every mode. On by default            | `true`                   |
+| `httpRoute.acmeChallenge.serviceName` / `serviceNamespace` / `port` | Target of the challenges (cross-namespace needs a ReferenceGrant there)                          | `acme-solver` / `production` / `80` |
+| `httpRoute.certificate.enabled`    | When `ingress.enabled=false` and the site had a cert-manager cert (`ingress.tls` + issuer annotation), create an equivalent Certificate (same Secret, hosts, issuer) so renewals continue | `true` |
+| `httpRoute.unavailablePage`        | Replace Envoy 502-504 (no ready pods, timeouts) with the site page, keeping the 5xx code                                         | `false`                  |
+| `httpRoute.pages.brand.name`       | Client name (page title). Empty = `ingress.hostname`                                                                             | `""`                     |
+| `httpRoute.pages.brand.logoUrl`    | https URL of the client logo (loaded by URL, not embedded)                                                                       | `""`                     |
+| `httpRoute.pages.brand.primaryColor` | Brand color, `#rgb` or `#rrggbb`. Darker/softer shades are derived with CSS `color-mix()`                                      | `#bd0b29`                |
+| `httpRoute.pages.brand.backgroundColor` | Page background color, `#rgb` or `#rrggbb`                                                                                  | `#000000`                |
+| `httpRoute.pages.brand.contactEmail` | Support email shown in the info box. Empty = hidden                                                                            | `""`                     |
+| `httpRoute.pages.brand.lang`       | HTML language                                                                                                                    | `es`                     |
+| `httpRoute.pages.<page>.*`         | `badge`, `title`, `message`, `infoTitle`, `infoMessage`, `waitingText`, `imageUrl` for `maintenance`, `suspended`, `unavailable` | see values               |
+| `httpRoute.pages.<page>.imageUrl`  | https URL of a client-designed image: the page shows ONLY that image (title + message as alt text)                               | `""`                     |
+| `httpRoute.pages.maintenance.retryAfter` | Seconds in the Retry-After header (0 = no header)                                                                          | `3600`                   |
+
+Convention: a site keeps `httpRoute.mode` / `httpRoute.unavailablePage` in its `values.yaml` and the page content (`httpRoute.pages`) in a separate `pages.yaml`, loaded by ArgoCD with `helm.valueFiles: [values.yaml, pages.yaml]` and `ignoreMissingValueFiles: true`. Pages are self-contained (no external CSS, JS or fonts); only `logoUrl` / `imageUrl` are fetched by the browser.
+| `backendTrafficPolicy.enabled`     | Create an Envoy Gateway BackendTrafficPolicy targeting the HTTPRoute (requires `httpRoute.enabled`)                              | `false`                  |
+| `backendTrafficPolicy.spec`        | Policy spec without targetRefs (evaluated as template)                                                                           | `{timeout.tcp.connectTimeout: 10s}` |
 
 ### Database parameters
 

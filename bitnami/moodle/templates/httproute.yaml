@@ -1,0 +1,80 @@
+{{- /*
+Gateway API HTTPRoute (datacurso fork, 28.0.9). Opcional: httpRoute.enabled.
+28.0.10: httpRoute.mode (active por defecto) y hostnames sin duplicados.
+28.0.11: regla de challenges HTTP-01 de Let's Encrypt (httpRoute.acmeChallenge, encendida por defecto).
+*/}}
+
+{{- if .Values.httpRoute.enabled }}
+{{- if not .Values.httpRoute.parentRefs }}
+{{- fail "httpRoute.parentRefs es obligatorio cuando httpRoute.enabled=true" }}
+{{- end }}
+{{- $mode := include "moodle.httpRoute.mode" . }}
+{{- $hostnames := list }}
+{{- if .Values.httpRoute.hostnames }}
+{{- $hostnames = .Values.httpRoute.hostnames }}
+{{- else }}
+{{- $hostnames = append $hostnames .Values.ingress.hostname }}
+{{- range .Values.ingress.extraHosts }}
+{{- $hostnames = append $hostnames .name }}
+{{- end }}
+{{- end }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+  {{- if or .Values.httpRoute.annotations .Values.commonAnnotations }}
+  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.httpRoute.annotations .Values.commonAnnotations ) "context" . ) }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs: {{- include "common.tplvalues.render" ( dict "value" .Values.httpRoute.parentRefs "context" $ ) | nindent 4 }}
+  hostnames:
+    {{- range ($hostnames | uniq) }}
+    - {{ . | quote }}
+    {{- end }}
+  rules:
+    {{- with .Values.httpRoute.acmeChallenge }}
+    {{- if .enabled }}
+    # Let's Encrypt HTTP-01 (28.0.11): en todos los modos, antes que cualquier pagina o regla.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /.well-known/acme-challenge/
+      backendRefs:
+        - name: {{ .serviceName }}
+          {{- if and .serviceNamespace (ne .serviceNamespace $.Release.Namespace) }}
+          namespace: {{ .serviceNamespace }}
+          {{- end }}
+          port: {{ .port }}
+    {{- end }}
+    {{- end }}
+    {{- if eq $mode "active" }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ .Values.httpRoute.path | quote }}
+      backendRefs:
+        - name: {{ include "common.names.fullname" . }}
+          port: {{ .Values.service.ports.http }}
+      {{- if .Values.httpRoute.timeouts }}
+      timeouts: {{- include "common.tplvalues.render" ( dict "value" .Values.httpRoute.timeouts "context" $ ) | nindent 8 }}
+      {{- end }}
+    {{- if .Values.httpRoute.extraRules }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.httpRoute.extraRules "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- else }}
+    # mode {{ $mode }}: todo el host responde la pagina, sin tocar los pods ni extraRules
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: {{ printf "%s-%s" (include "common.names.fullname" .) $mode }}
+    {{- end }}
+{{- end }}
