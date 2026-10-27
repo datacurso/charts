@@ -143,7 +143,7 @@ body{
   border:1px solid rgba(255,255,255,.5);border-radius:2rem;padding:3.5rem 2.5rem;
   box-shadow:0 20px 25px -5px rgba(0,0,0,.05),0 8px 10px -6px rgba(0,0,0,.01),inset 0 0 0 1px rgba(255,255,255,.8);
 }
-.logo{display:block;max-height:56px;max-width:220px;margin:0 auto 1.75rem}
+.logo{display:block;max-height:25rem;max-width:min(25rem,100%);height:auto;margin:0 auto 1.75rem}
 .badge{display:inline-flex;align-items:center;gap:.5rem;padding:.375rem .75rem;margin-bottom:2rem;border-radius:9999px;background:var(--brand-soft);border:1px solid var(--brand-line)}
 .dot{position:relative;display:flex;width:.625rem;height:.625rem}
 .dot i{position:absolute;inset:0;border-radius:9999px;background:var(--brand)}
