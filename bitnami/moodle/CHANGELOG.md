@@ -1,12 +1,9 @@
 # Changelog
 
-## 29.0.3 (2026-10-27)
-
-* [bitnami/moodle] Paginas de httpRoute: logo de marca mas grande (max 25rem de alto y ancho; nunca mas ancho que la tarjeta en pantallas chicas). Antes 56px x 220px.
-
 ## 29.0.2 (2026-10-27)
 
 * [bitnami/moodle] httpRoute.certificate.labels: labels del Certificate propio (el que se crea al apagar el Ingress). Default `buendata.com/acme-solver: gateway`, que el ClusterIssuer letsencrypt-prod usa para elegir el solver gatewayHTTPRoute (los 5 edges): la renovacion HTTP-01 entra por cualquier edge y no depende de nginx ni del Service acme-solver. Sin cambios para sitios con el Ingress prendido (su Certificate sigue siendo de ingress-shim).
+* [bitnami/moodle] Paginas de httpRoute: logo de marca mas grande (max 25rem de alto y ancho; nunca mas ancho que la tarjeta en pantallas chicas). Antes 56px x 220px.
 
 ## 29.0.1 (2026-10-26)
 

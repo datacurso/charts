@@ -69,42 +69,6 @@ entries:
       tanzuCategory: application
     apiVersion: v2
     appVersion: 4.5.4
-    created: '2026-10-27T17:31:46.094942641-05:00'
-    dependencies:
-    - condition: mariadb.enabled
-      name: mariadb
-      repository: oci://registry-1.docker.io/bitnamicharts
-      version: 22.x.x
-    - name: common
-      repository: oci://registry-1.docker.io/bitnamicharts
-      tags:
-      - bitnami-common
-      version: 2.x.x
-    description: Moodle(TM) LMS is an open source online Learning Management System
-      widely used at universities, schools, and corporations. It is modular and highly
-      adaptable to any type of online learning.
-    digest: 1392a88f443d19403c2983af069ba001d92c8cafcaecb9511ecc5e02b0a2b902
-    home: https://bitnami.com
-    icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
-    keywords:
-    - moodle
-    - learning
-    - php
-    maintainers:
-    - name: Broadcom, Inc. All Rights Reserved.
-      url: https://github.com/bitnami/charts
-    name: moodle
-    sources:
-    - https://github.com/bitnami/charts/tree/main/bitnami/moodle
-    urls:
-    - moodle/moodle-29.0.3.tgz
-    version: 29.0.3
-  - annotations:
-      category: E-Learning
-      licenses: Apache-2.0
-      tanzuCategory: application
-    apiVersion: v2
-    appVersion: 4.5.4
     created: '2026-10-27T01:54:10.432879296-05:00'
     dependencies:
     - condition: mariadb.enabled
@@ -119,7 +83,7 @@ entries:
     description: Moodle(TM) LMS is an open source online Learning Management System
       widely used at universities, schools, and corporations. It is modular and highly
       adaptable to any type of online learning.
-    digest: d465ea898a72b9266a54ff1df0290a2c83330279a3f6ad02ce6b7b12ae5f6ff8
+    digest: d4f02ae8ecc5685a7b83c5e3556c087897cd1f7f6f5d15d354af0f794cb05f9a
     home: https://bitnami.com
     icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/moodle/img/moodle-stack-220x234.png
     keywords:
