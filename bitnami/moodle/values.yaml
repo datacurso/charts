@@ -837,6 +837,11 @@ httpRoute:
     ## @param httpRoute.certificate.enabled Crear el Certificate propio al apagar el Ingress
     ##
     enabled: true
+    ## @param httpRoute.certificate.labels Labels del Certificate. El default elige el solver
+    ## gatewayHTTPRoute del ClusterIssuer (renovacion por los edges, sin nginx)
+    ##
+    labels:
+      buendata.com/acme-solver: gateway
   ## CONTENIDO de las paginas (marca y textos). Convencion: cada sitio lo define en un archivo propio
   ## `pages.yaml` junto a su values.yaml (cargado por ArgoCD con helm.valueFiles), y en values.yaml
   ## solo activa: httpRoute.mode / httpRoute.unavailablePage. Solo se renderiza la pagina en uso.

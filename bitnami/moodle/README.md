@@ -337,6 +337,7 @@ You may want to review the [PV reclaim policy](https://kubernetes.io/docs/tasks/
 | `httpRoute.acmeChallenge.enabled`  | Route `/.well-known/acme-challenge/` (Let's Encrypt HTTP-01) to the platform Service in every mode. On by default            | `true`                   |
 | `httpRoute.acmeChallenge.serviceName` / `serviceNamespace` / `port` | Target of the challenges (cross-namespace needs a ReferenceGrant there)                          | `acme-solver` / `production` / `80` |
 | `httpRoute.certificate.enabled`    | When `ingress.enabled=false` and the site had a cert-manager cert (`ingress.tls` + issuer annotation), create an equivalent Certificate (same Secret, hosts, issuer) so renewals continue | `true` |
+| `httpRoute.certificate.labels`     | Labels of that Certificate. The default selects the ClusterIssuer's `gatewayHTTPRoute` solver (renewals through any edge, no nginx) | `{buendata.com/acme-solver: gateway}` |
 | `httpRoute.unavailablePage`        | Replace Envoy 502-504 (no ready pods, timeouts) with the site page, keeping the 5xx code                                         | `false`                  |
 | `httpRoute.pages.brand.name`       | Client name (page title). Empty = `ingress.hostname`                                                                             | `""`                     |
 | `httpRoute.pages.brand.logoUrl`    | https URL of the client logo (loaded by URL, not embedded)                                                                       | `""`                     |

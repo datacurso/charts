@@ -1,5 +1,9 @@
 # Changelog
 
+## 29.0.2 (2026-10-27)
+
+* [bitnami/moodle] httpRoute.certificate.labels: labels del Certificate propio (el que se crea al apagar el Ingress). Default `buendata.com/acme-solver: gateway`, que el ClusterIssuer letsencrypt-prod usa para elegir el solver gatewayHTTPRoute (los 5 edges): la renovacion HTTP-01 entra por cualquier edge y no depende de nginx ni del Service acme-solver. Sin cambios para sitios con el Ingress prendido (su Certificate sigue siendo de ingress-shim).
+
 ## 29.0.1 (2026-10-26)
 
 Une v6 (28.0.9 a 28.0.11) con v7 (29.0.0). Version unica para todos los sitios.
